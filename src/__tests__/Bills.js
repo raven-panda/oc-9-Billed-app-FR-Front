@@ -7,6 +7,7 @@ import BillsUI from "../views/BillsUI.js"
 import { bills } from "../fixtures/bills.js"
 import { ROUTES_PATH} from "../constants/routes.js";
 import {localStorageMock} from "../__mocks__/localStorage.js";
+import '@testing-library/jest-dom/extend-expect';
 
 import router from "../app/Router.js";
 
@@ -25,8 +26,7 @@ describe("Given I am connected as an employee", () => {
       window.onNavigate(ROUTES_PATH.Bills)
       await waitFor(() => screen.getByTestId('icon-window'))
       const windowIcon = screen.getByTestId('icon-window')
-      //to-do write expect expression
-
+      expect(windowIcon).toHaveClass('active-icon')
     })
     test("Then bills should be ordered from earliest to latest", () => {
       document.body.innerHTML = BillsUI({ data: bills })
