@@ -17,7 +17,7 @@ export default class NewBill {
     e.preventDefault()
     console.log('e.target.querySelector(`input[data-testid="datepicker"]`).value', e.target.querySelector(`input[data-testid="datepicker"]`).value)
     const email = JSON.parse(localStorage.getItem("user")).email
-    
+
     await this.createFile();
 
     const bill = {
@@ -47,7 +47,7 @@ export default class NewBill {
     const email = JSON.parse(localStorage.getItem("user")).email;
     formData.append('file', file);
     formData.append('email', email);
-    
+
     return this.store
       .bills()
       .create({
@@ -56,10 +56,10 @@ export default class NewBill {
           noContentType: true
         }
       })
-      .then(({filePath, key}) => {
-        console.log(filePath)
+      .then(({fileUrl, key}) => {
+        console.log(fileUrl)
         this.billId = key
-        this.fileUrl = filePath
+        this.fileUrl = fileUrl
         this.fileName = fileName
       })
       .catch(error => console.error(error));
