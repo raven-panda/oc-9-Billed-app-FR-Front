@@ -33,10 +33,10 @@ export default class NewBill {
           noContentType: true
         }
       })
-      .then(({fileUrl, key}) => {
-        console.log(fileUrl)
+      .then(({filePath, key}) => {
+        console.log(filePath)
         this.billId = key
-        this.fileUrl = fileUrl
+        this.fileUrl = filePath
         this.fileName = fileName
       }).catch(error => console.error(error))
   }
