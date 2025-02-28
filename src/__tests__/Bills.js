@@ -71,6 +71,35 @@ describe("Given I am connected as an employee", () => {
       expect(handleShowModal).toHaveBeenCalled();   
     })
   });
+
+  // Check if Create bill button is present in Bill page and correctly redirects to new bill
+  describe("When I am on Bill Page and I click on New bill button", () => {
+    test("Then should redirect to new bill page", async () => {
+      const html = BillsUI({ data: bills });
+      document.body.innerHTML = html;
+
+      const onNavigate = (pathname) => {
+        document.body.innerHTML = ROUTES({ pathname })
+      };
+
+      Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+      window.localStorage.setItem('user', JSON.stringify({
+        type: 'Employee'
+      }));
+      const billsContainer = new Bills({
+        document, onNavigate, store: null, localStorage: window.localStorage
+      });
+
+      const handleNewBill = jest.fn((e) => billsContainer.handleClickNewBill());
+      const newBillButton = await waitFor(() => screen.getByTestId("btn-new-bill"));
+      expect(newBillButton).toBeTruthy();
+      newBillButton.addEventListener("click", handleNewBill);
+      userEvent.click(newBillButton);
+      
+      const sendNewBillText = await waitFor(() => screen.getByText("Envoyer une note de frais"));
+      expect(sendNewBillText).toBeTruthy();
+    })
+  });
 })
 
 // Integration test GET
