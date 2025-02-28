@@ -138,7 +138,7 @@ describe("Given I am user connected as an employee", () => {
       router()
     });
 
-    test("Fetches bills from an API and fails with 404 message error", async () => {
+    test("Then fetches bills from an API and fails with 404 message error", async () => {
       mockStore.bills.mockImplementationOnce(() => {
         return {
           list: () => {
@@ -153,7 +153,7 @@ describe("Given I am user connected as an employee", () => {
       expect(message).toBeTruthy();
     });
 
-    test("Fetches bills from an API and fails with 500 message error", async () => {
+    test("Or then bills from an API and fails with 500 message error", async () => {
       mockStore.bills.mockImplementationOnce(() => {
         return {
           list: () => {
