@@ -8,43 +8,20 @@ export default class NewBill {
     this.store = store
     const formNewBill = this.document.querySelector(`form[data-testid="form-new-bill"]`)
     formNewBill.addEventListener("submit", this.handleSubmit)
-    const file = this.document.querySelector(`input[data-testid="file"]`)
-    file.addEventListener("change", this.handleChangeFile)
     this.fileUrl = null
     this.fileName = null
     this.billId = null
     new Logout({ document, localStorage, onNavigate })
   }
-  handleChangeFile = e => {
-    e.preventDefault()
-    const file = this.document.querySelector(`input[data-testid="file"]`).files[0]
-    const filePath = e.target.value.split(/\\/g)
-    const fileName = filePath[filePath.length-1]
-    const formData = new FormData()
-    const email = JSON.parse(localStorage.getItem("user")).email
-    formData.append('file', file)
-    formData.append('email', email)
-
-    this.store
-      .bills()
-      .create({
-        data: formData,
-        headers: {
-          noContentType: true
-        }
-      })
-      .then(({filePath, key}) => {
-        console.log(filePath)
-        this.billId = key
-        this.fileUrl = filePath
-        this.fileName = fileName
-      }).catch(error => console.error(error))
-  }
-  handleSubmit = e => {
+  handleSubmit = async e => {
     e.preventDefault()
     console.log('e.target.querySelector(`input[data-testid="datepicker"]`).value', e.target.querySelector(`input[data-testid="datepicker"]`).value)
     const email = JSON.parse(localStorage.getItem("user")).email
+    
+    await this.createFile();
+
     const bill = {
+      id: this.billId,
       email,
       type: e.target.querySelector(`select[data-testid="expense-type"]`).value,
       name:  e.target.querySelector(`input[data-testid="expense-name"]`).value,
@@ -59,6 +36,33 @@ export default class NewBill {
     }
     this.updateBill(bill)
     this.onNavigate(ROUTES_PATH['Bills'])
+  }
+
+  createFile = async () => {
+    const fileInput = this.document.querySelector(`input[data-testid="file"]`);
+    const file = fileInput.files[0];
+    const fileRawPath = fileInput.value.split(/\\/g);
+    const fileName = fileRawPath[fileRawPath.length-1];
+    const formData = new FormData();
+    const email = JSON.parse(localStorage.getItem("user")).email;
+    formData.append('file', file);
+    formData.append('email', email);
+    
+    return this.store
+      .bills()
+      .create({
+        data: formData,
+        headers: {
+          noContentType: true
+        }
+      })
+      .then(({filePath, key}) => {
+        console.log(filePath)
+        this.billId = key
+        this.fileUrl = filePath
+        this.fileName = fileName
+      })
+      .catch(error => console.error(error));
   }
 
   // not need to cover this function by tests
