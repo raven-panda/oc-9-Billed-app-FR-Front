@@ -43,7 +43,7 @@ export default () => {
                       <input type="number" class="form-control blue-border" data-testid="vat" placeholder="70" />
                     </div>
                     <div class="flex-col">
-                      <label for="pct" class="white-text">%</label>
+                      <label for="pct" class="bold-label">%</label>
                       <input required type="number" class="form-control blue-border" data-testid="pct" placeholder="20" />
                     </div>
                   </div>
