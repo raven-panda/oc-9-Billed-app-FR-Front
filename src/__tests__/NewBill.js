@@ -9,7 +9,8 @@ import {localStorageMock} from "../__mocks__/localStorage.js";
 import mockStore from "../__mocks__/store";
 import NewBill from "../containers/NewBill.js";
 import NewBillUI from "../views/NewBillUI.js";
-import {ROUTES} from "../constants/routes.js";
+import {ROUTES, ROUTES_PATH} from "../constants/routes.js";
+import router from "../app/Router.js";
 
 jest.mock("../app/store", () => mockStore);
 
@@ -144,4 +145,87 @@ describe("Given I am connected as an employee and I am on NewBill Page", () => {
       form.addEventListener("submit", handleSubmit);
     });
   });
+
+  describe("When an error occurs on API", () => {
+    beforeEach(() => {
+      jest.spyOn(mockStore, "bills");
+      Object.defineProperty(
+          window,
+          'localStorage',
+          { value: localStorageMock }
+      )
+      window.localStorage.setItem('user', JSON.stringify({
+        type: 'Employee',
+        email: "a@a"
+      }))
+      const root = document.createElement("div")
+      root.setAttribute("id", "root")
+      document.body.appendChild(root)
+      router()
+    });
+
+    test("Then fetches bills from an API and fails with 404 message error", async () => {
+      mockStore.bills.mockImplementationOnce(() => {
+        return {
+          update: (bill) => {
+            return Promise.reject(new Error("Erreur 404"))
+          }
+        }
+      });
+
+      window.onNavigate(ROUTES_PATH.NewBill);
+      await new Promise(process.nextTick);
+
+      // Fill form with test data
+      screen.getByTestId("expense-type").value = "Transports";
+      screen.getByTestId("expense-name").value = "Train Paris-Marseille";
+      screen.getByTestId("amount").value = "100";
+      screen.getByTestId("datepicker").value = "2023-03-15";
+      screen.getByTestId("vat").value = "20";
+      screen.getByTestId("pct").value = "20";
+      screen.getByTestId("commentary").value = "Voyage pro";
+
+      const fileInput = screen.getByTestId("file");
+      const file = new File(["test"], "facture.jpg", { type: "image/jpeg" });
+      await userEvent.upload(fileInput, file);
+
+      screen.getByTestId("btn-send-bill").click();
+      await new Promise(process.nextTick);
+
+      const message = await screen.getByText(/Envoyer une note de frais/);
+      expect(message).toBeTruthy();
+    });
+
+    test("Or then bills from an API and fails with 500 message error", async () => {
+      mockStore.bills.mockImplementationOnce(() => {
+        return {
+          update: (bill) => {
+            return Promise.reject(new Error("Erreur 500"))
+          }
+        }
+      });
+
+      window.onNavigate(ROUTES_PATH.NewBill);
+      await new Promise(process.nextTick);
+
+      // Fill form with test data
+      screen.getByTestId("expense-type").value = "Transports";
+      screen.getByTestId("expense-name").value = "Train Paris-Marseille";
+      screen.getByTestId("amount").value = "100";
+      screen.getByTestId("datepicker").value = "2023-03-15";
+      screen.getByTestId("vat").value = "20";
+      screen.getByTestId("pct").value = "20";
+      screen.getByTestId("commentary").value = "Voyage pro";
+
+      const fileInput = screen.getByTestId("file");
+      const file = new File(["test"], "facture.jpg", { type: "image/jpeg" });
+      await userEvent.upload(fileInput, file);
+
+      screen.getByTestId("btn-send-bill").click();
+      await new Promise(process.nextTick);
+
+      const message = await screen.getByText(/Envoyer une note de frais/);
+      expect(message).toBeTruthy();
+    })
+  })
 })
