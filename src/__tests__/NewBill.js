@@ -103,49 +103,6 @@ describe("Given I am connected as an employee and I am on NewBill Page", () => {
     });
   });
 
-  describe("When API fails", () => {
-    beforeEach(async () => {
-      jest.spyOn(mockStore, "bills")
-      Object.defineProperty(
-          window,
-          'localStorage',
-          { value: localStorageMock }
-      )
-      window.localStorage.setItem('user', JSON.stringify({
-        type: 'Employee',
-        email: "a@a"
-      }))
-
-      document.body.innerHTML = NewBillUI();
-
-      const onNavigate = (pathname) => {
-        document.body.innerHTML = ROUTES({ pathname })
-      };
-
-      const newBill = new NewBill({
-        document, onNavigate, store: mockStore, localStorage: window.localStorage
-      });
-
-      const handleSubmit = jest.spyOn(newBill, "handleSubmit");
-
-      // Fill form with test data
-      screen.getByTestId("expense-type").value = "Transports";
-      screen.getByTestId("expense-name").value = "Train Paris-Marseille";
-      screen.getByTestId("amount").value = "100";
-      screen.getByTestId("datepicker").value = "2023-03-15";
-      screen.getByTestId("vat").value = "20";
-      screen.getByTestId("pct").value = "20";
-      screen.getByTestId("commentary").value = "Voyage pro";
-
-      const fileInput = screen.getByTestId("file");
-      const file = new File(["test"], "facture.jpg", { type: "image/jpeg" });
-      await userEvent.upload(fileInput, file);
-
-      const form = screen.getByTestId("form-new-bill");
-      form.addEventListener("submit", handleSubmit);
-    });
-  });
-
   describe("When an error occurs on API", () => {
     beforeEach(() => {
       jest.spyOn(mockStore, "bills");
@@ -158,20 +115,21 @@ describe("Given I am connected as an employee and I am on NewBill Page", () => {
         type: 'Employee',
         email: "a@a"
       }))
+      document.body.innerHTML = "";
       const root = document.createElement("div")
       root.setAttribute("id", "root")
       document.body.appendChild(root)
       router()
     });
 
-    test("Then fetches bills from an API and fails with 404 message error", async () => {
-      mockStore.bills.mockImplementationOnce(() => {
-        return {
-          update: (bill) => {
-            return Promise.reject(new Error("Erreur 404"))
-          }
-        }
-      });
+    test("Then post bill to API and fails with 404 message error in console", async () => {
+      const logSpy = jest.spyOn(global.console, 'error');
+      const error = new Error("Erreur 404");
+
+      mockStore.bills.mockImplementation(() => ({
+        create: () => Promise.reject(error),
+        update: () => Promise.reject(error),
+      }));
 
       window.onNavigate(ROUTES_PATH.NewBill);
       await new Promise(process.nextTick);
@@ -192,18 +150,26 @@ describe("Given I am connected as an employee and I am on NewBill Page", () => {
       screen.getByTestId("btn-send-bill").click();
       await new Promise(process.nextTick);
 
+      expect(logSpy).toHaveBeenCalled()
+      expect(logSpy).toHaveBeenCalledTimes(2);
+      expect(logSpy).toHaveBeenCalledWith(error);
+
+      logSpy.mockRestore();
+
       const message = await screen.getByText(/Envoyer une note de frais/);
       expect(message).toBeTruthy();
+
+      mockStore.bills.mockRestore();
     });
 
-    test("Or then bills from an API and fails with 500 message error", async () => {
-      mockStore.bills.mockImplementationOnce(() => {
-        return {
-          update: (bill) => {
-            return Promise.reject(new Error("Erreur 500"))
-          }
-        }
-      });
+    test("Or then I post bill to API and fails with 500 message error in console", async () => {
+      const logSpy = jest.spyOn(global.console, 'error');
+      const error = new Error("Erreur 500");
+
+      mockStore.bills.mockImplementation(() => ({
+        create: () => Promise.reject(error),
+        update: () => Promise.reject(error),
+      }));
 
       window.onNavigate(ROUTES_PATH.NewBill);
       await new Promise(process.nextTick);
@@ -224,8 +190,16 @@ describe("Given I am connected as an employee and I am on NewBill Page", () => {
       screen.getByTestId("btn-send-bill").click();
       await new Promise(process.nextTick);
 
+      expect(logSpy).toHaveBeenCalled()
+      expect(logSpy).toHaveBeenCalledTimes(2);
+      expect(logSpy).toHaveBeenCalledWith(error);
+
+      logSpy.mockRestore();
+
       const message = await screen.getByText(/Envoyer une note de frais/);
       expect(message).toBeTruthy();
+
+      mockStore.bills.mockRestore();
     })
   })
 })

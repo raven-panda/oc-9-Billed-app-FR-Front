@@ -17,7 +17,7 @@ export default class NewBill {
     e.preventDefault()
     console.log('e.target.querySelector(`input[data-testid="datepicker"]`).value', e.target.querySelector(`input[data-testid="datepicker"]`).value)
     const email = JSON.parse(localStorage.getItem("user")).email
-    
+
     await this.createFile();
 
     const bill = {
@@ -35,7 +35,6 @@ export default class NewBill {
       status: 'pending'
     }
     this.updateBill(bill)
-    this.onNavigate(ROUTES_PATH['Bills'])
   }
 
   createFile = async () => {
@@ -47,7 +46,7 @@ export default class NewBill {
     const email = JSON.parse(localStorage.getItem("user")).email;
     formData.append('file', file);
     formData.append('email', email);
-    
+
     return this.store
       .bills()
       .create({
