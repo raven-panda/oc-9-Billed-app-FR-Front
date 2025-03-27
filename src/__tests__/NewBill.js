@@ -16,8 +16,11 @@ jest.mock("../app/store", () => mockStore);
 
 
 describe("Given I am connected as an employee", () => {
+
+  // Test that checks if all form fields are presents
   describe("When I am on NewBill Page", () => {
     test("Then form should appear", async () => {
+      // Injecting the NewBill page UI into the document
       document.body.innerHTML = NewBillUI();
 
       // Checking title presence
@@ -52,26 +55,34 @@ describe("Given I am connected as an employee", () => {
   });
 })
 
-// Integration test POST
+// Integration tests POST
 describe("Given I am connected as an employee and I am on NewBill Page", () => {
+
+  // POST valid form
   describe("When I POST valid bill creation form", () => {
     test("Then submit handlers should be called, and should be redirected to bills page", async () => {
+      // Spy the bills mock
       jest.spyOn(mockStore, "bills");
+      // Injecting the NewBill page UI into the document
       document.body.innerHTML = NewBillUI();
 
       const onNavigate = (pathname) => {
         document.body.innerHTML = ROUTES({ pathname })
       };
 
+      // Assigning localStorage in Jest context with localStorageMock
       Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+      // Put user role and login in mocked localStorage
       window.localStorage.setItem('user', JSON.stringify({
         type: 'Employee'
       }));
 
+      // Instantiating NewBill container where the page scripts are
       const newBill = new NewBill({
         document, onNavigate, store: mockStore, localStorage: window.localStorage
       });
 
+      // Spying methods of NewBill container that we want to test
       const handleSubmit = jest.spyOn(newBill, "handleSubmit");
       const createFile = jest.spyOn(newBill, "createFile");
       const billsCreate = jest.spyOn(mockStore.bills(), "create");
@@ -85,47 +96,67 @@ describe("Given I am connected as an employee and I am on NewBill Page", () => {
       screen.getByTestId("pct").value = "20";
       screen.getByTestId("commentary").value = "Voyage pro";
 
+      // Creates file and upload to the file input of the form
       const fileInput = screen.getByTestId("file");
       const file = new File(["test"], "facture.jpg", { type: "image/jpeg" });
       await userEvent.upload(fileInput, file);
 
+      // Calling form submit event with spied instance of submit callback
       const form = screen.getByTestId("form-new-bill");
       form.addEventListener("submit", handleSubmit);
       fireEvent.submit(form);
 
+      // We expect that methods were called
       expect(handleSubmit).toBeCalled();
       expect(createFile).toBeCalled();
 
       expect(billsCreate).toHaveBeenCalled();
 
+      // We expect that we went to Bills view
       const billsPageTitle = await waitFor(() => screen.getByText("Mes notes de frais"));
       expect(billsPageTitle).toBeTruthy();
     });
   });
 
+  // POST API error (404 and 500)
   describe("When an error occurs on API", () => {
     beforeEach(() => {
+      // Spy the bills mock
       jest.spyOn(mockStore, "bills");
+
+      // Assigning localStorage in Jest context with localStorageMock
       Object.defineProperty(
           window,
           'localStorage',
           { value: localStorageMock }
       )
+
+      // Put user role and login in mocked localStorage
       window.localStorage.setItem('user', JSON.stringify({
         type: 'Employee',
         email: "a@a"
       }))
+
+      // Reinitialize body HTML before each tests
       document.body.innerHTML = "";
+
+      // Create 'root' element for router
       const root = document.createElement("div")
       root.setAttribute("id", "root")
       document.body.appendChild(root)
+
+      // Calling the router
       router()
     });
 
     test("Then post bill to API and fails with 404 message error in console", async () => {
+      // Spying console.error method
       const logSpy = jest.spyOn(global.console, 'error');
+
+      // Instantiating error in variable in order to check that console.error was called with this error
       const error = new Error("Erreur 404");
 
+      // Mock implementation of bills store with error
       mockStore.bills.mockImplementation(() => ({
         create: () => Promise.reject(error),
         update: () => Promise.reject(error),
@@ -143,26 +174,33 @@ describe("Given I am connected as an employee and I am on NewBill Page", () => {
       screen.getByTestId("pct").value = "20";
       screen.getByTestId("commentary").value = "Voyage pro";
 
+      // Creates file and upload to the file input of the form
       const fileInput = screen.getByTestId("file");
       const file = new File(["test"], "facture.jpg", { type: "image/jpeg" });
       await userEvent.upload(fileInput, file);
 
+      // POST request is triggered there
       screen.getByTestId("btn-send-bill").click();
       await new Promise(process.nextTick);
 
+      // We expect that error has been logged as error in the console
       expect(logSpy).toHaveBeenCalled()
       expect(logSpy).toHaveBeenCalledTimes(2);
       expect(logSpy).toHaveBeenCalledWith(error);
 
+      // Restores the initial console.error method that we've spied
       logSpy.mockRestore();
 
+      // We expect that we didn't change view using the title of the form
       const message = await screen.getByText(/Envoyer une note de frais/);
       expect(message).toBeTruthy();
 
+      // Restores the mocked implementation of bills create / update methods
       mockStore.bills.mockRestore();
     });
 
     test("Or then I post bill to API and fails with 500 message error in console", async () => {
+      // Same as 404 error POST test here, but with 500 error message
       const logSpy = jest.spyOn(global.console, 'error');
       const error = new Error("Erreur 500");
 
