@@ -20,23 +20,33 @@ describe("Given I am connected as an employee", () => {
   describe("When I am on Bills Page", () => {
     test("Then bill icon in vertical layout should be highlighted", async () => {
 
+      // Assigning localStorage in Jest context with localStorageMock
       Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+      // Put user role in mocked localStorage
       window.localStorage.setItem('user', JSON.stringify({
         type: 'Employee'
       }))
+
+      // Create 'root' element for router
       const root = document.createElement("div")
       root.setAttribute("id", "root")
       document.body.append(root)
       router()
+
       window.onNavigate(ROUTES_PATH.Bills)
+
+      // We expect that window icon is present, and it has class 'active-icon'
       await waitFor(() => screen.getByTestId('icon-window'))
       const windowIcon = screen.getByTestId('icon-window')
       expect(windowIcon).toHaveClass('active-icon')
     })
     test("Then bills should be ordered from earliest to latest", () => {
       document.body.innerHTML = BillsUI({ data: bills })
+      // Getting all dates
       const dates = screen.getAllByText(/^(19|20)\d\d[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])$/i).map(a => a.innerHTML)
+      // Defining anti chrono sort callback
       const antiChrono = (a, b) => ((a < b) ? 1 : -1)
+      // We expect that our manually sorted dates matches with those displayed in the page
       const datesSorted = [...dates].sort(antiChrono)
       expect(dates).toEqual(datesSorted)
     })
@@ -64,11 +74,12 @@ describe("Given I am connected as an employee", () => {
 
       const modal = await waitFor(() => screen.getByTestId("modaleFile"));
       expect(modal).toBeTruthy();
-      
+
+      // We expect that when we click the eye icon, the file modal pops up
       const handleShowModal = jest.fn((e) => billsContainer.handleClickIconEye(icon));
       icon.addEventListener('click', handleShowModal);
       userEvent.click(icon);
-      expect(handleShowModal).toHaveBeenCalled();   
+      expect(handleShowModal).toHaveBeenCalled();
     })
   });
 
@@ -90,12 +101,13 @@ describe("Given I am connected as an employee", () => {
         document, onNavigate, store: null, localStorage: window.localStorage
       });
 
+      // We expect that when we click the 'new bill' button, we're redirected to NewBills view
       const handleNewBill = jest.fn((e) => billsContainer.handleClickNewBill());
       const newBillButton = await waitFor(() => screen.getByTestId("btn-new-bill"));
       expect(newBillButton).toBeTruthy();
       newBillButton.addEventListener("click", handleNewBill);
       userEvent.click(newBillButton);
-      
+
       const sendNewBillText = await waitFor(() => screen.getByText("Envoyer une note de frais"));
       expect(sendNewBillText).toBeTruthy();
     })
@@ -115,7 +127,7 @@ describe("Given I am user connected as an employee", () => {
       router();
       window.onNavigate(ROUTES_PATH.Bills);
       await waitFor(() => screen.getByText("Mes notes de frais"));
-      
+
       const tableContent = await screen.getByTestId("tbody");
       expect(tableContent).toBeTruthy();
     });

@@ -72,7 +72,7 @@ describe("Given I am connected as an employee and I am on NewBill Page", () => {
 
       // Assigning localStorage in Jest context with localStorageMock
       Object.defineProperty(window, 'localStorage', { value: localStorageMock })
-      // Put user role and login in mocked localStorage
+      // Put user role in mocked localStorage
       window.localStorage.setItem('user', JSON.stringify({
         type: 'Employee'
       }));
