@@ -45,7 +45,7 @@ describe("Given I am connected as an employee", () => {
       // Getting all dates
       const dates = screen.getAllByText(/^(19|20)\d\d[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])$/i).map(a => a.innerHTML)
       // Defining anti chrono sort callback
-      const antiChrono = (a, b) => ((a < b) ? 1 : -1)
+      const antiChrono = (a, b) => new Date(b.date) - new Date(a.date);
       // We expect that our manually sorted dates matches with those displayed in the page
       const datesSorted = [...dates].sort(antiChrono)
       expect(dates).toEqual(datesSorted)
