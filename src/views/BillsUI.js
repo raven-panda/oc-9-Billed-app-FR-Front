@@ -20,11 +20,28 @@ const row = (bill) => {
   }
 
 const rows = (data) => {
-  return (data && data.length) ? data.sort((a, b) => (a.date < b.date) ? 1 : -1).map(bill => row(bill)).join("") : ""
-}
+  return (data && data.length) ?
+    data.sort((a, b) => new Date(formatDate(a.date)) - new Date(formatDate(b.date)))
+      .reverse()
+      .map(bill => row(bill))
+      .join("")
+    : "";
+};
+
+const formatDate = (dateStr) => {
+  const months = {
+    "Janv.": "Jan", "Févr.": "Feb", "Mars": "Mar", "Avr.": "Apr",
+    "Mai": "May", "Juin": "Jun", "Juil.": "Jul", "Août": "Aug",
+    "Sept.": "Sep", "Oct.": "Oct", "Nov.": "Nov", "Déc.": "Dec"
+  };
+
+  let [day, month, year] = dateStr.split(" ");
+  month = months[month] || month; // Convertit en anglais pour `Date`
+  return `${year}-${month}-${day}`; // Format lisible par `new Date()`
+};
 
 export default ({ data: bills, loading, error }) => {
-  
+
   const modal = () => (`
     <div class="modal fade" id="modaleFile" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true" data-testid="modaleFile">
       <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -47,7 +64,7 @@ export default ({ data: bills, loading, error }) => {
   } else if (error) {
     return ErrorPage(error)
   }
-  
+
   return (`
     <div class='layout'>
       ${VerticalLayout(120)}
